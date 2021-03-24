@@ -112,9 +112,10 @@ func UpdateUser(args ...provider.Argument) (*provider.Operation, error) {
 	return &user
 }
 
-func WithBash() UpdateUserOperationOption {
-	return func(u *UpdateUserOperation) {
-		u.Shell = "/usr/bin/bash"
+func WithBash() *provider.Argument {
+	return &provider.Argument{
+		Name: CreateShell,
+		Value: "/usr/bin/bash",
 	}
 }
 

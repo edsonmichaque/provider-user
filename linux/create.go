@@ -64,6 +64,18 @@ func NewCreateUserOperation(name string, options ...CreateUserOperationOption) *
 	}
 }
 
+func (u *CreateUserOperation) addValidators() {
+		u.validators = []Validator{
+			func(a *Validable) error {
+				createUser := a.(CreateUserOperation)
+
+				if a.Name == "" {
+					return errors.New("Username shouldn't be empty")
+				}
+			},
+		}
+}
+
 func CreateUser(args ...provider.Argument) (*provider.Operation, error) {
 	user := CreateUserOperation{}
 
@@ -85,8 +97,10 @@ func CreateUser(args ...provider.Argument) (*provider.Operation, error) {
 		}
 	}
 
+	user.addValidators()
 	return &user
 }
+
 
 func WithBash() CreateUserOperationOption {
 	return func(u *CreateUserOperation) {
@@ -118,7 +132,14 @@ func WithGroup(group string) CreateUserOperationOption {
 	}
 }
 
-func (p CreateUserOperation) Validate() error {
+func (p *CreateUserOperation) Validate() error {
+	for _, validator := range p.validators {
+		if err := validator(p); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (p CreateUserOperation) Command() string {
