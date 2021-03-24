@@ -1,7 +1,40 @@
 package linux
 
 import (
-	"github.com/edsonmichaque/ulombe/pkg/types"
+	"errors"
+	"github.com/ulombe/sdk"
+	"github.com/ulombe/sdk/provider"
+)
+
+const (
+		createMainCommand = "useradd"
+		createTemplateFile = "templates/create.tmpl"
+)
+
+const (
+		createGroupFlag = "-g"
+		createGroupsFlag = "-G"
+		createSystemFlag = "-r"
+		createShellFlag = "-s"
+		createCommentFlag = "-c"
+		createHomeFlag = "-m"
+		createHomeDirFlag = "-d"
+)
+
+const (
+	CreateUID = "uid"
+	CreateGID = "gid"
+	CreateName = "name"
+	CreateLock = "lock"
+	CreatePassword = "password"
+	CreateExpire = "expire"
+	CreateComment = "comment"
+	CreateGroup = "group"
+	CreateGroups = "groups"
+	CreateSystem = "system"
+	CreateShell = "shell"
+	CreateHome = "home"
+	CreateHomeDir = "home_dir"
 )
 
 type CreateUserOperationOption func(*CreateUserOperation)
@@ -35,19 +68,19 @@ func CreateUser(args ...provider.Argument) (*provider.Operation, error) {
 	user := CreateUserOperation{}
 
 	for _, arg := range args {
-		if arg.Name == "name" {
+		if arg.Name == CreateName {
 			user.Name = arg.Value.(string)
 		}
 
-		if arg.Name == "shell" {
+		if arg.Name == CreateShell {
 			user.Shell = arg.Value.(string)
 		}
 
-		if arg.Name == "password" {
+		if arg.Name == CreatePassword {
 			user.Password = arg.Value.(string)
 		}
 
-		if arg.Name == "comment" {
+		if arg.Name == CreateComment {
 			user.Comment = arg.Value.(string)
 		}
 	}
@@ -88,29 +121,29 @@ func WithGroup(group string) CreateUserOperationOption {
 func (p CreateUserOperation) Validate() error {
 }
 
-func (p CreateUserOperation) command() string {
+func (p CreateUserOperation) Command() string {
 	command := make([]string, 0)
 
-	command = append(command, "useradd")
+	command = append(command, createMainCommand)
 
 	if u.System {
-		command = append(command, "-r")
+		command = append(command, createSystemFlag)
 	}
 
 	if u.Shell != "" {
-		command = append(command, "-s", u.Shell)
+		command = append(command, createShellFlag, u.Shell)
 	}
 
 	if u.Group != "" {
-		command = append(command, "-g", u.Group)
+		command = append(command, createGroupFlag, u.Group)
 	}
 
 	if len(u.Groups) > 0 {
-		command = append(command, "-G", strings.Join(u.Groups, ","))
+		command = append(command, createGroupsFlag, strings.Join(u.Groups, ","))
 	}
 
 	if u.Comment != "" {
-		command = append(command, "-c", fmt.Sprintf("\"%s\"", u.Comment))
+		command = append(command, createCommentFlag, fmt.Sprintf("\"%s\"", u.Comment))
 	}
 
 	if u.Name != "" {
@@ -118,19 +151,19 @@ func (p CreateUserOperation) command() string {
 	}
 
 	if u.Home && (u.HomeDir == "") {
-		command = append(command, "-m")
+		command = append(command, createHomeFlag)
 		u.HomeDir = fmt.Sprintf("/home/%s", u.Name)
 	}
 
 	if u.HomeDir != "" {
-		command = append(command, "-m")
-		command = append(command, "-d", u.HomeDir)
+		command = append(command, createHomeFlag)
+		command = append(command, createHomeDirFlag, u.HomeDir)
 	}
 
 	return strings.Join(command, " ")
 }
 
 func (u *CreateUserOperation) Render() {
-	tmpl := template.Must(template.ParseFiles("templates/create.tmpl"))
+	tmpl := template.Must(template.ParseFiles(createTemplateFile))
 	tmpl.Execute(os.Stdout, p)
 }

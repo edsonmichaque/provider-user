@@ -1,10 +1,20 @@
-package linux
+package userProvider
 
 import (
 	"errors"
 	"gitlab.com/ulombe/sdk"
 	"gitlab.com/ulombe/sdk/provider"
 	"gitlab.com/ulombe/provider-user/linux"
+)
+
+const (
+	providerLevels = 2
+	providerLevelOperation = 1
+	providerLevelOS = 0
+	linuxProvider = "linux"
+	linuxCreateOperation = "create"
+	linuxUpdateOperation = "update"
+	linuxDeleteOperation = "delete"
 )
 
 type UserProvider struct {
@@ -25,18 +35,18 @@ func(u UserProvider) Provides() map[]string {
 }
 
 func(u UserProvider) Execute(levels ...string, args ...provider.Argument) (provider.Operation, error) {
-	if len(level) != 2 {
+	if len(levels) != providerLevels {
 		return nil, errors.New("Must have 2 levels")
 	}
 
-	switch levels[0] {
-	case "linux":
-		switch levels[1] {
-		case "create":
+	switch levels[providerLevelOS] {
+	case linuxProvider:
+		switch levels[providerLevelOperation] {
+		case linuxCreateOperation:
 			return linux.CreateUser(args...)
-		case "update":
+		case linuxUpdateOperation:
 			return linux.UpdateUser(args...)
-		case "delete":
+		case linuxDeleteOperation:
 			return linux.DeleteUser(args...)
 		}
 	}

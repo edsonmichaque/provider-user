@@ -1,7 +1,43 @@
 package linux
 
 import (
-	"github.com/edsonmichaque/ulombe/pkg/types"
+	"gitlab.com/ulombe/sdk"
+	"gitlab.com/ulombe/sdk/provider"
+)
+
+const (
+		updateMainCommand = "usermod"
+		updateTemplateFile = "templates/update.tmpl"
+)
+
+const (
+	updateSystemFlag = "-r"
+	updateShellFlag = "-s"
+	updateHomeDirFlag = "-d"
+	updateHomeFlag = "-m"
+	updateGroupFlag = "-g"
+	updateGroupsFlag = "-G"
+	updateAppendFlag = "-a"
+)
+
+const (
+	UpdateUID = "uid"
+	UpdateGID = "gid"
+	UpdateName = "name"
+	UpdateNewName = "new_name"
+	UpdateMoveHome = "move_home"
+	UpdateAppend = "append"
+	UpdateUnlock = "unlock"
+	UpdateLock = "lock"
+	UpdatePassword = "password"
+	UpdateExpire = "expire"
+	UpdateComment = "comment"
+	UpdateGroup = "group"
+	UpdateGroups = "groups"
+	UpdateSystem = "system"
+	UpdateShell = "shell"
+	UpdateHome = "home"
+	UpdateHomeDir = "home_dir"
 )
 
 type UpdateUserOperationOption func(*UpdateUserOperation)
@@ -10,6 +46,11 @@ type UpdateUserOperation struct {
 	UID string
 	GID string
 	Name string
+	NewName string
+	MoveHome bool
+	Append bool
+	Unlock bool
+	Lock bool
 	Password string
 	Expire string
 	Comment string
@@ -35,19 +76,35 @@ func UpdateUser(args ...provider.Argument) (*provider.Operation, error) {
 	user := UpdateUserOperation{}
 
 	for _, arg := range args {
-		if arg.Name == "name" {
+		if arg.Name == UpdateName {
 			user.Name = arg.Value.(string)
 		}
 
-		if arg.Name == "shell" {
+		if arg.Name == UpdateNewName {
+			user.NewName = arg.Value.(string)
+		}
+
+		if arg.Name == UpdateMoveHome" {
+			user.MoveHome = arg.Value.(bool)
+		}
+
+		if arg.Name == UpdateUnlock {
+			user.Unlock = arg.Value.(bool)
+		}
+
+		if arg.Name == UpdateLock {
+			user.Lock = arg.Value.(bool)
+		}
+
+		if arg.Name == UpdateShell {
 			user.Shell = arg.Value.(string)
 		}
 
-		if arg.Name == "password" {
+		if arg.Name == UpdatePassword {
 			user.Password = arg.Value.(string)
 		}
 
-		if arg.Name == "comment" {
+		if arg.Name == UpdateComment {
 			user.Comment = arg.Value.(string)
 		}
 	}
@@ -88,29 +145,33 @@ func WithGroup(group string) UpdateUserOperationOption {
 func (p UpdateUserOperation) Validate() error {
 }
 
-func (p UpdateUserOperation) command() string {
+func (p UpdateUserOperation) Command() string {
 	command := make([]string, 0)
 
-	command = append(command, "useradd")
+	command = append(command, updateMainCommand)
 
 	if u.System {
-		command = append(command, "-r")
+		command = append(command, updateSystemFlag)
 	}
 
 	if u.Shell != "" {
-		command = append(command, "-s", u.Shell)
+		command = append(command, updateShellFlag, u.Shell)
 	}
 
 	if u.Group != "" {
-		command = append(command, "-g", u.Group)
+		command = append(command, updateGroupFlag, u.Group)
+	}
+
+	if u.Append {
+		command = append(command, updateAppendFlag)
 	}
 
 	if len(u.Groups) > 0 {
-		command = append(command, "-G", strings.Join(u.Groups, ","))
+		command = append(command, updateGroupsFlag, strings.Join(u.Groups, ","))
 	}
 
 	if u.Comment != "" {
-		command = append(command, "-c", fmt.Sprintf("\"%s\"", u.Comment))
+		command = append(command, updateCommentFlag, fmt.Sprintf("\"%s\"", u.Comment))
 	}
 
 	if u.Name != "" {
@@ -118,19 +179,19 @@ func (p UpdateUserOperation) command() string {
 	}
 
 	if u.Home && (u.HomeDir == "") {
-		command = append(command, "-m")
+		command = append(command, updateHomeDirFlag)
 		u.HomeDir = fmt.Sprintf("/home/%s", u.Name)
 	}
 
 	if u.HomeDir != "" {
-		command = append(command, "-m")
-		command = append(command, "-d", u.HomeDir)
+		command = append(command, updateHomeDirFlag)
+		command = append(command, updateHomeFlag, u.HomeDir)
 	}
 
 	return strings.Join(command, " ")
 }
 
 func (u *UpdateUserOperation) Render() {
-	tmpl := template.Must(template.ParseFiles("templates/create.tmpl"))
+	tmpl := template.Must(template.ParseFiles(updateTemplateFile))
 	tmpl.Execute(os.Stdout, p)
 }
