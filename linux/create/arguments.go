@@ -2,7 +2,7 @@ package create
 
 import (
   "github.com/ulombe/sdk"
-  "github.com/ulombe/sdk/provider"
+  "github.com/ulombe/sdk/provide"
   "github.com/ulombe/provider-user/linux"
 )
 

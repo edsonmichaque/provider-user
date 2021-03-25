@@ -1,4 +1,4 @@
-package userProvider
+package user
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ const (
 	Delete = "delete"
 )
 
-func NewProvider() sdk.Provider {
+func DefaultProvider() sdk.Provider {
 	return func(levels ...string, args ...provider.Argument) (provider.Operation, error) {
 		if len(levels) != depth {
 			return nil, errors.New("Must have 2 levels")
