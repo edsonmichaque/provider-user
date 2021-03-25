@@ -5,15 +5,15 @@ import (
   "gitlab.com/ulombe/provider-user/linux/create"
 )
 
-newUserProvider := userProvider.New()
+userProvider := user.DefaultResource.Provider()
 
-newOperation, err := newUserProvider.Execute(
-  userProvider.Linux,
-  userProvider.Create,
+newOperation, err := userProvider(
+  user.Linux,
+  user.Create,
   create.WithName("beto"),
   create.WithPassword("beto"),
   create.WithGroup("michaque"),
   create.WithGroups([]string{"admin", "sudo"})
 )
 
-newOperation.Render(writer)
+engine.Push(newOperation)
